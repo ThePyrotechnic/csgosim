@@ -1,0 +1,247 @@
+random_seed: 1000101
+
+rounds: 30
+economy:
+  elimination: 3250
+  time_win: 3250
+  defusal: 3500
+  detonation: 3500
+
+  plant_elimination: 300
+  plant_loss: 800
+  planter: 300
+  defuser: 300
+  t_survivor: 0
+
+  pistol_loss: 1900
+  loss: [1400, 1900, 2400, 2900, 3400]
+t:
+  weapons:
+    - glock
+    - tec9
+    - sawedoff
+    - mac10
+    - ak47
+    - galil
+    - sg553
+    - g3sg1
+ct:
+  weapons:
+    - fiveseven
+    - p2000
+    - usps
+    - mag7
+    - mp9
+    - aug
+    - famas
+    - m4a4
+    - m4a1s
+    - scar20
+weapons:
+  special:
+    knife:
+      price: 0
+      award: 1500
+      damage: 100
+      penetration: 1
+  rifles:
+    ak47:
+      price: 2700
+      award: 300
+      damage: 36
+      penetration: 0.775
+      aug:
+        price: 3300
+        award: 300
+        damage: 28
+        penetration: 0.9
+      famas:
+        price: 2050
+        award: 300
+        damage: 30
+        penetration: 0.7
+      galil:
+        price: 1800
+        award: 300
+        damage: 30
+        penetration: 0.775
+      m4a4:
+        price: 3100
+        award: 300
+        damage: 33
+        penetration: 0.7
+      m4a1s:
+        price: 3100
+        award: 300
+        damage: 33
+        penetration: 0.7
+      sg553:
+        price: 3000
+        award: 300
+        damage: 30
+        penetration: 100
+  smgs:
+    bizon:
+      price: 1400
+      award: 600
+      damage: 27
+      penetration: 0.575
+    mac10:
+      price: 1050
+      award: 600
+      damage: 29
+      penetration: 57.5
+    mp7:
+      price: 1500
+      award: 600
+      damage: 29
+      penetration: 62.5
+    mp5:
+      price: 1500
+      award: 600
+      damage: 27
+      penetration: 62.5
+    mp9:
+      price: 1250
+      award: 600
+      damage: 26
+      penetration: 0.6
+    p90:
+      price: 2350
+      award: 300
+      damage: 26
+      penetration: 0.69
+    ump45:
+      price: 1200
+      award: 600
+      damage: 35
+      penetration: 0.65
+  pistols:
+    deagle:
+      price: 700
+      award: 300
+      damage: 63
+      penetration: 0.932
+    r8:
+      price: 600
+      award: 300
+      damage: 86
+      penetration: 0.932
+    berettas:
+      price: 400
+      award: 300
+      damage: 38
+      penetration: 0.575
+    fiveseven:
+      price: 500
+      award: 300
+      damage: 32
+      penetration: 0.9115
+    glock:
+      price: 200
+      award: 300
+      damage: 30
+      penetration: 0.47
+    p2000:
+      price: 200
+      award: 300
+      damage: 35
+      penetration: 0.505
+    usps:
+      price: 200
+      award: 300
+      damage: 35
+      penetration: 0.505
+    p250:
+      price: 300
+      award: 300
+      damage: 38
+      penetration: 0.64
+    cz75:
+      price: 500
+      award: 100
+      damage: 31
+      penetration: 0.7765
+    tec9:
+      price: 500
+      award: 300
+      damage: 33
+      penetration: 0.906
+  heavy:
+    mag7:
+      price: 1300
+      award: 900
+      damage: 30
+      penetration: 0.75
+    nova:
+      price: 1050
+      award: 900
+      damage: 26
+      penetration: 0.5
+    sawedoff:
+      price: 1100
+      award: 900
+      damage: 32
+      penetration: 0.75
+    xm1014:
+      price: 2000
+      award: 900
+      damage: 20
+      penetration: 0.8
+    m249:
+      price: 5200
+      award: 300
+      damage: 32
+      penetration: 0.8
+    negev:
+      price: 1700
+      award: 300
+      damage: 35
+      penetration: 0.71
+    awp:
+      price: 4750
+      award: 100
+      damage: 115
+      penetration: 0.975
+    g3sg1:
+      price: 5000
+      award: 300
+      damage: 80
+      penetration: 0.825
+    scar20:
+      price: 5000
+      award: 300
+      damage: 80
+      penetration: 0.825
+    ssg08:
+      price: 1700
+      award: 300
+      damage: 88
+      penetration: 0.85
+equipment:
+  grenades:
+    he:
+      price: 300
+      award: 300
+      damage: 98
+      penetration: 0.5816
+    flashbang:
+      price: 200
+    smoke:
+      price: 300
+    decoy:
+      price: 50
+    molotov:
+      price: 400
+    incendiary:
+      price: 600
+  gear:
+    kevlar:
+      price: 650
+    helmet:
+      price_damaged: 1000
+      price: 350
+    zeus:
+      price: 200
+    kit:
+      price: 400

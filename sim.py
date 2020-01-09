@@ -1,8 +1,8 @@
-from lib.CsgoSim import Simulation
+import CsgoSim
 
 
 def main():
-    s = Simulation()
+    s = CsgoSim.Simulation()
     s.start()
 
 
