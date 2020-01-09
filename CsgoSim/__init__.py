@@ -1,8 +1,7 @@
-from dataclasses import dataclass, field
-import itertools
+from dataclasses import dataclass
 from pathlib import Path
 import random as r
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import yaml
 
@@ -29,8 +28,14 @@ class _Weapon(_DictClass):
 
 @dataclass(init=False)
 class _Equipment(_DictClass):
+    name: str
     price: int = -1
     price_damaged: int = -1
+
+    def __init__(self, config: Dict, name: str):
+        super().__init__(config)
+
+        self.name = name
 
 
 @dataclass(init=False)
@@ -75,7 +80,7 @@ class Simulation:
             self.weapons[class_] = {name: _Weapon(data, name) for name, data in weapons.items()}
 
         for class_, equipment in self._config["equipment"].items():
-            self.equipment[class_] = {name: _Equipment(data) for name, data in equipment.items()}
+            self.equipment[class_] = {name: _Equipment(data, name) for name, data in equipment.items()}
 
     def start(self):
         self._reset_gamestate()
@@ -85,4 +90,3 @@ class Simulation:
     def _reset_gamestate(self):
         self.players = [_Player({"side": "t"}, self.weapons) for _ in range(5)]
         self.players.extend([_Player({"side": "ct"}, self.weapons) for _ in range(5)])
-
