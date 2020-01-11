@@ -54,6 +54,7 @@ class _Player(_DictClass):
     health: int = 100
     side: str = None
     role: str = "rifle"
+    position: str = None
 
     def __init__(self, config: Dict, default_secondary: Union[List, str]):
         super().__init__(config)
@@ -178,6 +179,7 @@ class Simulation:
 
     def _sim_round(self):
         self._buy_period()
+        self._assign_positions()
         # self._early_round()
         # self._mid_round()
         # self._late_round()
@@ -185,7 +187,6 @@ class Simulation:
     def _buy_period(self):
         # Pistol round
         if self.round_num in (0, self._config["rounds"] / 2):
-
             for player in self._players():
                 player.money = self._config["economy"]["starting_money"]
                 player.secondary = player.default_secondary
@@ -197,6 +198,13 @@ class Simulation:
 
         for player in self._players():
             print(player)
+
+    def _assign_positions(self):
+        # Pistol round
+        if self.round_num in (0, self._config["rounds"] / 2):
+            site_chance = self._config["positioning"]["ct"]["pistol_round"]["a"]["site_chance"].copy()
+            for player in r.sample(self.ct, k=len(self.ct)):
+                player.position = "a" if site_chance.pop >= r.random() else "b"
 
     def _reset_gamestate(self):
         self.round_num = 0

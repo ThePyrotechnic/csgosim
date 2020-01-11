@@ -1,28 +1,7 @@
-#t:
-#  weapons:
-#    - glock
-#    - tec9
-#    - sawedoff
-#    - mac10
-#    - ak47
-#    - galil
-#    - sg553
-#    - g3sg1
-#ct:
-#  weapons:
-#    - fiveseven
-#    - p2000
-#    - usps
-#    - mag7
-#    - mp9
-#    - aug
-#    - famas
-#    - m4a4
-#    - m4a1s
-#    - scar20
-
 # Seed for all RNG
-random_seed: 1000101
+# Set to 0 for no seed
+# 1000101
+random_seed: 0
 # Rounds in a game. Must be even
 rounds: 30
 
@@ -113,6 +92,19 @@ buy_settings:
       rifle: *default
       awp: *default
 
+positioning:
+  pistol_round:
+    ct:
+      a:
+        # Percent chance for a given player to be on A site.
+        # Otherwise, they will be on B site.
+        # Players are shuffled each round so different roles may play
+        # different positions.
+        # NOTE: The list is read from right to left, so the first player
+        # in this case has a 100% chance to play A, the second has 90%, etc.
+        site_chance: [0, 0.1, 0.7, 0.9, 1]
+    t:
+      
 weapons:
   special:
     knife:
