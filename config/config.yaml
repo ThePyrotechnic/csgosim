@@ -1,3 +1,26 @@
+#t:
+#  weapons:
+#    - glock
+#    - tec9
+#    - sawedoff
+#    - mac10
+#    - ak47
+#    - galil
+#    - sg553
+#    - g3sg1
+#ct:
+#  weapons:
+#    - fiveseven
+#    - p2000
+#    - usps
+#    - mag7
+#    - mp9
+#    - aug
+#    - famas
+#    - m4a4
+#    - m4a1s
+#    - scar20
+
 # Seed for all RNG
 random_seed: 1000101
 # Rounds in a game. Must be even
@@ -31,26 +54,32 @@ economy:
 
   starting_money: 800
 
-roles:
-  # How many players will be designated AWPers (prioritize saving for
-  # an AWP)
-  awp: 1
-  # Chance of a double-AWP setup
-  double_awp: 0.05
+player:
+  pistol:
+    t: glock
+    ct: [p2000, usps]
+  roles:
+    # How many players will be designated AWPers (prioritize saving for
+    # an AWP)
+    awp: 1
+    # Chance of a double-AWP setup
+    double_awp: 0.05
 
 buy_settings:
   pistol_round:
     # Amount of kits that will always be purchased on pistol rounds
-    mandatory_kits: 1
+    kits: 1
 
     # Recursive, weighted priority list for purchases.
     # Purchases are evaluated in order. If an entry is a list,
     # one item is chosen with the given probability.
-    # If an entry contains a "choices" key, it will be evaluated
-    # recursively.
-    # If an entry contains a "t" and "ct" key,
-    # the recursion will branch based on the player's current side.
     # If no probabilities are given, they will be assumed to be equal.
+    # Specify weighted probabilities for a list by adding list entries
+    # of the form: `{n: <name>, p: <probability>}`
+    # If an entry contains a `c` key (c for "choices"), it will be
+    # evaluated recursively.
+    # If an entry contains a `t` and `ct` key,
+    # the recursion will branch based on the player's current side.
     # A player will attempt to buy until the list is exhausted or
     # they run out of money.
 
@@ -58,7 +87,7 @@ buy_settings:
     # pistol or kevlar, with kevlar chosen 90% of the time. If pistol
     # is chosen and the player is on T side, then they will randomly
     # choose either the deagle, p250, or tec9. If they are CT, they
-    # will choose the deagle, p250, or fiveseven each with 30% chance.,
+    # will choose the deagle, p250, or fiveseven each with 30% chance,
     # or the cz75 with 10% chance.
     # Following this, they will unconditionally attempt to buy a
     # flashbang, and finally try to buy either a smoke or a he grenade.
@@ -67,39 +96,23 @@ buy_settings:
     #       (See: https://docs.python.org/3/library/random.html#random.choices)
     # NOTE: If you set a probability for one item, you must also set
     #       it for all other entries in that list.
+    # NOTE: A priority list must be defined for all roles
+    #       use YAML anchors to duplicate entries if desired
     purchase_priorities:
+      default: &default
       - [
-        kevlar: {p: 0.9},
-        pistol: {
-          p: 0.1,
-          t: [deagle, p250, tec9],
-          ct: [deagle: {p: 0.3}, p250: {p: 0.3}, fiveseven: {p: 0.3}, cz75: {p: 0.1}]}
+      {n: kevlar, p: 0.9},
+      { n: pistol,
+        p: 0.1,
+        t: [deagle, p250, tec9],
+        ct: [{n: deagle, p: 0.3}, {n: p250, p: 0.3}, {n: fiveseven, p: 0.3}, {n: cz75, p: 0.1}]
+      }
       ]
       - flashbang
       - [smoke, he]
+      rifle: *default
+      awp: *default
 
-t:
-  weapons:
-    - glock
-    - tec9
-    - sawedoff
-    - mac10
-    - ak47
-    - galil
-    - sg553
-    - g3sg1
-ct:
-  weapons:
-    - fiveseven
-    - p2000
-    - usps
-    - mag7
-    - mp9
-    - aug
-    - famas
-    - m4a4
-    - m4a1s
-    - scar20
 weapons:
   special:
     knife:
@@ -107,7 +120,7 @@ weapons:
       award: 1500
       damage: 100
       penetration: 1
-  rifles:
+  rifle:
     ak47:
       price: 2700
       award: 300
@@ -143,7 +156,7 @@ weapons:
         award: 300
         damage: 30
         penetration: 100
-  smgs:
+  smg:
     bizon:
       price: 1400
       award: 600
@@ -179,7 +192,7 @@ weapons:
       award: 600
       damage: 35
       penetration: 0.65
-  pistols:
+  pistol:
     deagle:
       price: 700
       award: 300
@@ -282,22 +295,28 @@ weapons:
       damage: 88
       penetration: 0.85
 equipment:
-  grenades:
+  grenade:
     he:
       price: 300
+      limit: 1
     #      award: 300
     #      damage: 98
     #      penetration: 0.5816
     flashbang:
       price: 200
+      limit: 2
     smoke:
       price: 300
+      limit: 1
     decoy:
       price: 50
+      limit: 1
     molotov:
       price: 400
+      limit: 1
     incendiary:
       price: 600
+      limit: 1
   gear:
     kevlar:
       price: 650
@@ -305,7 +324,10 @@ equipment:
       # Price if current armor is < 100
       price_damaged: 1000
       price: 350
+      limit: 1
     zeus:
       price: 200
+      limit: 1
     kit:
       price: 400
+      limit: 1
