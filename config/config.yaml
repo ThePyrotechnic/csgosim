@@ -1,20 +1,83 @@
+# Seed for all RNG
 random_seed: 1000101
-
+# Rounds in a game. Must be even
 rounds: 30
+
 economy:
+  # T win by elimination
   elimination: 3250
+  # CT win by time
   time_win: 3250
+  # CT win by defusal
   defusal: 3500
+  # T win by detonation
   detonation: 3500
 
+  # T bonus for planting and killing all CTs
   plant_elimination: 300
+  # T bonus for planting and losing the round
   plant_loss: 800
+  # Bonus given immediately to planter
   planter: 300
+  # Bonus given immediately to defuser
   defuser: 300
+  # Bonus given to surviving on T
   t_survivor: 0
 
+  # Money given to pistol round losers
   pistol_loss: 1900
+  # Incremental loss bonus values
   loss: [1400, 1900, 2400, 2900, 3400]
+
+  starting_money: 800
+
+roles:
+  # How many players will be designated AWPers (prioritize saving for
+  # an AWP)
+  awp: 1
+  # Chance of a double-AWP setup
+  double_awp: 0.05
+
+buy_settings:
+  pistol_round:
+    # Amount of kits that will always be purchased on pistol rounds
+    mandatory_kits: 1
+
+    # Recursive, weighted priority list for purchases.
+    # Purchases are evaluated in order. If an entry is a list,
+    # one item is chosen with the given probability.
+    # If an entry contains a "choices" key, it will be evaluated
+    # recursively.
+    # If an entry contains a "t" and "ct" key,
+    # the recursion will branch based on the player's current side.
+    # If no probabilities are given, they will be assumed to be equal.
+    # A player will attempt to buy until the list is exhausted or
+    # they run out of money.
+
+    # For example, the default value will first choose between a
+    # pistol or kevlar, with kevlar chosen 90% of the time. If pistol
+    # is chosen and the player is on T side, then they will randomly
+    # choose either the deagle, p250, or tec9. If they are CT, they
+    # will choose the deagle, p250, or fiveseven each with 30% chance.,
+    # or the cz75 with 10% chance.
+    # Following this, they will unconditionally attempt to buy a
+    # flashbang, and finally try to buy either a smoke or a he grenade.
+
+    # NOTE: Probabilities are relative, and so need not sum to 1
+    #       (See: https://docs.python.org/3/library/random.html#random.choices)
+    # NOTE: If you set a probability for one item, you must also set
+    #       it for all other entries in that list.
+    purchase_priorities:
+      - [
+        kevlar: {p: 0.9},
+        pistol: {
+          p: 0.1,
+          t: [deagle, p250, tec9],
+          ct: [deagle: {p: 0.3}, p250: {p: 0.3}, fiveseven: {p: 0.3}, cz75: {p: 0.1}]}
+      ]
+      - flashbang
+      - [smoke, he]
+
 t:
   weapons:
     - glock
@@ -222,9 +285,9 @@ equipment:
   grenades:
     he:
       price: 300
-      award: 300
-      damage: 98
-      penetration: 0.5816
+    #      award: 300
+    #      damage: 98
+    #      penetration: 0.5816
     flashbang:
       price: 200
     smoke:
@@ -239,6 +302,7 @@ equipment:
     kevlar:
       price: 650
     helmet:
+      # Price if current armor is < 100
       price_damaged: 1000
       price: 350
     zeus:
