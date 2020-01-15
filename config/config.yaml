@@ -100,11 +100,15 @@ positioning:
         # Otherwise, they will be on B site.
         # Players are shuffled each round so different roles may play
         # different positions.
-        # NOTE: The list is read from right to left, so the first player
-        # in this case has a 100% chance to play A, the second has 90%, etc.
-        site_chance: [0, 0.1, 0.7, 0.9, 1]
+        # NOTE: The first player in this case has a 100% chance to
+        # play A, the second has 90%, etc.
+        site_chance: [1, 0.9, 0.7, 0.1, 0]
     t:
-      
+      # 50% chance for an A take, else B
+      site_chance: 0.5
+      # 5% chance for one player to lurk
+      lurk: [0.05, 0, 0, 0, 0]
+
 weapons:
   special:
     knife:

@@ -1,11 +1,15 @@
 from collections import defaultdict
-from dataclasses import dataclass
-from enum import Enum, auto
+from dataclasses import dataclass, field
+import logging
 from pathlib import Path
 import random as r
 from typing import Dict, Generator, List, Union
 
 import yaml
+
+from CsgoSim._Helpers import choice_helper
+
+logger = logging.getLogger(__name__)
 
 
 class _DictClass:
@@ -40,6 +44,25 @@ class _Equipment(_Buyable):
     limit: int = -1
 
 
+@dataclass
+class _FightStats:
+    encounter: int
+    player_id: int
+    damage: int = 0
+    headshots: int = 0
+    bodyshots: int = 0
+    killed: bool = False
+
+
+@dataclass
+class _RoundStats:
+    round: int
+    damage_to: List[_FightStats] = field(default_factory=list)
+    damage_from: List[_FightStats] = field(default_factory=list)
+    assists: List[int] = field(default_factory=list)
+    killed_by: int = 0
+
+
 @dataclass(init=False)
 class _Player(_DictClass):
     primary: _Weapon = None
@@ -67,30 +90,8 @@ class _Player(_DictClass):
         self.limits = defaultdict(int)
 
     def process_purchases(self, priorities: Dict[str, List]):
-        def _purchase_helper(choice: Union[List, Dict, str]):
-            if isinstance(choice, str):
-                self.buy_item(choice)
-                return
-            elif isinstance(choice, list):
-                if isinstance(choice[0], dict):  # choice is a weighted list
-                    choice = r.choices(choice, weights=[e["p"] for e in choice], k=1)[0]
-                else:  # choice is a list of strings (evenly weighted)
-                    choice = r.choice(choice)
-            elif isinstance(choice, dict):
-                try:
-                    # Will succeed if choice contains a team-based sub-list
-                    choice = choice["t"] if self.side == "t" else choice["ct"]
-                except KeyError:
-                    try:
-                        # Will succeed if choice contains a non-team-based sub-list
-                        choice = choice["c"]
-                    except KeyError:
-                        # At this point choice must be a weighted string, with no sub-list
-                        choice = choice["n"]
-            _purchase_helper(choice)
-
         for entry in priorities[self.role]:
-            _purchase_helper(entry)
+            choice_helper(entry, self.side)
 
     def buy_item(self, choice: str) -> bool:
         buyable = Simulation.items[choice]
@@ -133,7 +134,7 @@ class _Player(_DictClass):
                 f" | Secondary: {self.secondary.name if self.secondary else None}"
                 f" | Grenades: {[g.name for g in self.grenades]} | Money: {self.money}"
                 f" | Health: {self.health} | Armor: {self.armor} | Helmet: {self.helmet}"
-                f" | Kit: {self.kit} | Side: {self.side} | Role: {self.role}")
+                f" | Kit: {self.kit} | Side: {self.side} | Role: {self.role} | Position: {self.position}")
 
 
 class Simulation:
@@ -147,14 +148,19 @@ class Simulation:
             self._config_path = Path(config_path)
         else:
             self._config_path = config_path
-        with open(self._config_path / Path("config.yaml")) as config_file:
+        full_path = self._config_path / Path("config.yaml")
+        logger.debug(f"Loading config at {full_path} . . .")
+        with open(full_path) as config_file:
             self._config.update(yaml.safe_load(config_file))
+        logger.info(f"Config loaded")
 
         if self._config["random_seed"] != 0:
+            logger.debug(f'Using random seed: {self._config["random_seed"]}')
             r.seed(self._config["random_seed"])
 
         self.t: List[_Player] = []
         self.ct: List[_Player] = []
+        self.players: List[_Player] = []  # List of all players for convenience
         self.round_num = 0
 
         for type_, weapons in self._config["weapons"].items():
@@ -162,8 +168,11 @@ class Simulation:
 
         for type_, equipment in self._config["equipment"].items():
             self.items.update({name: _Equipment(data, type_, name) for name, data in equipment.items()})
+        logger.debug(
+            f'Loaded {len(self._config["weapons"])} weapons and {len(self._config["equipment"])} pieces of equipment')
 
     def start(self):
+        logger.info("Starting simulation . . .")
         self._reset_gamestate()
 
         # Assign roles
@@ -171,6 +180,7 @@ class Simulation:
             p.role = "awp"
         for p in r.sample(self.ct, self._config["player"]["roles"]["awp"]):
             p.role = "awp"
+        logger.debug(f'Assigned {self._config["player"]["roles"]["awp"]} designated AWP role to each team')
 
         self._sim_round()
         # for round_num in range(self._config["rounds"]):
@@ -178,16 +188,25 @@ class Simulation:
         #     self.round_num = round_num
 
     def _sim_round(self):
+        logger.debug("Beginning buy period . . .")
         self._buy_period()
+        logger.debug("Buy period complete")
+
+        logger.debug("Assigning positions . . .")
         self._assign_positions()
+        logger.debug("Positions assigned")
+
         # self._early_round()
         # self._mid_round()
         # self._late_round()
 
+        for player in self.players:
+            print(player)
+
     def _buy_period(self):
         # Pistol round
         if self.round_num in (0, self._config["rounds"] / 2):
-            for player in self._players():
+            for player in self.players:
                 player.money = self._config["economy"]["starting_money"]
                 player.secondary = player.default_secondary
 
@@ -196,20 +215,26 @@ class Simulation:
                     p.buy_item("kit")
                 player.process_purchases(self._config["buy_settings"]["pistol_round"]["purchase_priorities"])
 
-        for player in self._players():
-            print(player)
-
     def _assign_positions(self):
         # Pistol round
         if self.round_num in (0, self._config["rounds"] / 2):
-            site_chance = self._config["positioning"]["ct"]["pistol_round"]["a"]["site_chance"].copy()
-            for player in r.sample(self.ct, k=len(self.ct)):
-                player.position = "a" if site_chance.pop >= r.random() else "b"
+            for site_chance, player in zip(self._config["positioning"]["pistol_round"]["ct"]["a"]["site_chance"],
+                                           r.sample(self.ct, k=len(self.ct))):
+                player.position = "a" if site_chance >= r.random() else "b"
+
+            site = "a" if self._config["positioning"]["pistol_round"]["t"]["site_chance"] >= r.random() else "b"
+
+            for lurk_chance, player in zip(self._config["positioning"]["pistol_round"]["t"]["lurk"],
+                                           r.sample(self.t, k=len(self.t))):
+                player.position = "lurk" if lurk_chance >= r.random() else site
 
     def _reset_gamestate(self):
+        logger.debug("Resetting gamestate . . .")
         self.round_num = 0
         self.t = [_Player({"side": "t"}, self._config["player"]["pistol"]["t"]) for _ in range(5)]
         self.ct = [_Player({"side": "ct"}, self._config["player"]["pistol"]["ct"]) for _ in range(5)]
+        self.players = list(self._players())
+        logger.debug("Gamestate has been reset")
 
     def _players(self) -> Generator[_Player, None, None]:
         for player in self.t:
