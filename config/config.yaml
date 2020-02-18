@@ -71,7 +71,7 @@ buy_settings:
     # Following this, they will unconditionally attempt to buy a
     # flashbang, and finally try to buy either a smoke or a he grenade.
 
-    # NOTE: Probabilities are relative, and so need not sum to 1
+    # NOTE: Probabilities are relative, and so they need not sum to 1
     #       (See: https://docs.python.org/3/library/random.html#random.choices)
     # NOTE: If you set a probability for one item, you must also set
     #       it for all other entries in that list.
@@ -80,15 +80,17 @@ buy_settings:
     purchase_priorities:
       default: &default
       - [
-      {n: kevlar, p: 0.9},
+      {n: kevlar, p: 0.8},
       { n: pistol,
         p: 0.1,
         t: [deagle, p250, tec9],
         ct: [{n: deagle, p: 0.3}, {n: p250, p: 0.3}, {n: fiveseven, p: 0.3}, {n: cz75, p: 0.1}]
       }
       ]
+      # This exists to let CTs who bought kits to buy a pistol or grenades
+      - {n: pistol, p: 0.4, ct: [p250, []], t: []}
       - flashbang
-      - [smoke, he]
+      - [smoke, he, flashbang]
       rifle: *default
       awp: *default
 
@@ -108,6 +110,15 @@ positioning:
       site_chance: 0.5
       # 5% chance for one player to lurk
       lurk: [0.05, 0, 0, 0, 0]
+
+encounter:
+  pistol_round:
+    # A player with the "lurk" role will add the lurk modifier to their
+    # given probability (values >= 1 are guaranteed encounters)
+    lurk_modifier: 0.1
+    # If a T's encounter chance is rolled, they will choose a
+    # random CT to attack
+    early: [0.1, 0.1, 0, 0, 0]
 
 weapons:
   special:

@@ -91,9 +91,14 @@ class _Player(_DictClass):
 
     def process_purchases(self, priorities: Dict[str, List]):
         for entry in priorities[self.role]:
-            choice_helper(entry, self.side)
+            choice = choice_helper(entry, self.side)
+            if choice:
+                self.buy_item(choice)
 
     def buy_item(self, choice: str) -> bool:
+        if choice == "":
+            return False
+
         buyable = Simulation.items[choice]
 
         use_price_damaged = False
@@ -161,6 +166,7 @@ class Simulation:
         self.t: List[_Player] = []
         self.ct: List[_Player] = []
         self.players: List[_Player] = []  # List of all players for convenience
+        self.positions: Dict[str, List[_Player]] = defaultdict(list)
         self.round_num = 0
 
         for type_, weapons in self._config["weapons"].items():
@@ -196,7 +202,7 @@ class Simulation:
         self._assign_positions()
         logger.debug("Positions assigned")
 
-        # self._early_round()
+        self._early_round()
         # self._mid_round()
         # self._late_round()
 
@@ -208,11 +214,13 @@ class Simulation:
         if self.round_num in (0, self._config["rounds"] / 2):
             for player in self.players:
                 player.money = self._config["economy"]["starting_money"]
-                player.secondary = player.default_secondary
 
-                # Buy mandatory kits before anything else
-                for p in r.sample(self.ct, self._config["buy_settings"]["pistol_round"]["kits"]):
-                    p.buy_item("kit")
+            # Buy mandatory kits before anything else
+            for p in r.sample(self.ct, self._config["buy_settings"]["pistol_round"]["kits"]):
+                p.buy_item("kit")
+
+            for player in self.players:
+                player.secondary = player.default_secondary
                 player.process_purchases(self._config["buy_settings"]["pistol_round"]["purchase_priorities"])
 
     def _assign_positions(self):
@@ -220,13 +228,29 @@ class Simulation:
         if self.round_num in (0, self._config["rounds"] / 2):
             for site_chance, player in zip(self._config["positioning"]["pistol_round"]["ct"]["a"]["site_chance"],
                                            r.sample(self.ct, k=len(self.ct))):
-                player.position = "a" if site_chance >= r.random() else "b"
+                chosen_pos = "a" if site_chance >= r.random() else "b"
+                player.position = chosen_pos
+                self.positions[chosen_pos].append(player)
 
             site = "a" if self._config["positioning"]["pistol_round"]["t"]["site_chance"] >= r.random() else "b"
 
             for lurk_chance, player in zip(self._config["positioning"]["pistol_round"]["t"]["lurk"],
                                            r.sample(self.t, k=len(self.t))):
-                player.position = "lurk" if lurk_chance >= r.random() else site
+                chosen_pos = "lurk" if lurk_chance >= r.random() else site
+                player.position = chosen_pos
+                self.positions[chosen_pos].append(player)
+
+    def _early_round(self):
+        for encounter_chance, player in zip(self._config["encounter"]["pistol_round"]["early"],
+                                            r.sample(self.t, k=len(self.t))):
+            if player.role == "lurk":
+                encounter_chance += self._config["encounter"]["pistol_round"]["lurk_modifier"]
+            if encounter_chance >= r.random():
+                self.battle(player, r.choice(self.ct))
+
+    def battle(self, t: _Player, ct: _Player):
+
+            pass
 
     def _reset_gamestate(self):
         logger.debug("Resetting gamestate . . .")
@@ -234,6 +258,7 @@ class Simulation:
         self.t = [_Player({"side": "t"}, self._config["player"]["pistol"]["t"]) for _ in range(5)]
         self.ct = [_Player({"side": "ct"}, self._config["player"]["pistol"]["ct"]) for _ in range(5)]
         self.players = list(self._players())
+        self.positions = {}
         logger.debug("Gamestate has been reset")
 
     def _players(self) -> Generator[_Player, None, None]:
